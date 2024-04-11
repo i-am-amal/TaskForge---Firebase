@@ -181,7 +181,6 @@ class _RegisterViewState extends State<RegisterView> {
                         //           context, '/home', (route) => false));
                         // }
 
-                        ///1.25.42 timelength
                       }
                       ////////////////////////////
                     },

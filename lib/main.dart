@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: "/",
+      initialRoute: "/splash",
       routes: {
         '/': (context) => LoginView(),
         '/register': (context) => RegisterView(),
@@ -46,4 +46,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-//2.30.00 time line
