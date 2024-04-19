@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:taskforge/model/task_model.dart';
 import 'package:taskforge/services/task_service.dart';
@@ -13,10 +14,10 @@ class AddTaskView extends StatefulWidget {
 }
 
 class _AddTaskViewState extends State<AddTaskView> {
-  TaskService _taskService = TaskService();
+  final TaskService _taskService = TaskService();
 
-  TextEditingController _titleController = TextEditingController();
-  TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   bool _edit = false;
   @override
   void dispose() {
@@ -50,7 +51,7 @@ class _AddTaskViewState extends State<AddTaskView> {
       body: Container(
           height: double.infinity,
           width: double.infinity,
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _taskKey,
             child: Column(
@@ -66,7 +67,7 @@ class _AddTaskViewState extends State<AddTaskView> {
                         "Add New Task",
                         style: themedata.textTheme.displayMedium,
                       ),
-                SizedBox(
+                const SizedBox(
                   height: 45,
                 ),
                 TextFormField(
@@ -84,15 +85,15 @@ class _AddTaskViewState extends State<AddTaskView> {
                     hintStyle: themedata.textTheme.displaySmall,
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.white),
+                      borderSide: const BorderSide(color: Colors.white),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.white),
+                      borderSide: const BorderSide(color: Colors.white),
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 25,
                 ),
                 TextFormField(
@@ -110,15 +111,15 @@ class _AddTaskViewState extends State<AddTaskView> {
                     hintStyle: themedata.textTheme.displaySmall,
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.white),
+                      borderSide: const BorderSide(color: Colors.white),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.white),
+                      borderSide: const BorderSide(color: Colors.white),
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 25,
                 ),
                 Center(
@@ -126,16 +127,18 @@ class _AddTaskViewState extends State<AddTaskView> {
                     onTap: () {
                       if (_taskKey.currentState!.validate()) {
                         if (_edit) {
-                          TaskModel _taskmodel = TaskModel(
+                          TaskModel taskmodel = TaskModel(
                               id: widget.task?.id,
                               title: _titleController.text,
-                              body: _descriptionController.text,status: widget.task?.status,createdAt: widget.task?.createdAt);
+                              body: _descriptionController.text,
+                              status: widget.task?.status,
+                              createdAt: widget.task?.createdAt);
 
                           _taskService
-                              .updateTasks(_taskmodel)
+                              .updateTasks(taskmodel,FirebaseAuth.instance.currentUser!.uid)
                               .then((value) => Navigator.pop(context));
                         } else {
-                          _addTask();
+                          _addTask(context);
                         }
                       }
                     },
@@ -166,22 +169,23 @@ class _AddTaskViewState extends State<AddTaskView> {
     );
   }
 
-  _addTask() async {
-    var id = Uuid().v1();
+  _addTask(context) async {
+    var id = const Uuid().v1();
 
-    TaskModel _taskModel = TaskModel(
+    TaskModel taskModel = TaskModel(
         title: _titleController.text,
         body: _descriptionController.text,
         createdAt: DateTime.now(),
         id: id,
         status: 1);
 
-    final task = await _taskService.createTask(_taskModel);
+    final task = await _taskService.createTask(
+        taskModel, FirebaseAuth.instance.currentUser!.uid);
 
     if (task != null) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Task Created')));
+          .showSnackBar(const SnackBar(content: Text('Task Created')));
     }
   }
 }

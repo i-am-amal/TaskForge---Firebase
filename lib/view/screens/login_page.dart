@@ -11,16 +11,14 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   final _loginKey = GlobalKey<FormState>();
-
   UserModel _usermodel = UserModel();
-  AuthService _authService = AuthService();
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
 
-  void _login() async {
-    //2.22.00 time line   //31/03
+  void _login(context) async {
     setState(() {
       _isLoading = true;
     });
@@ -28,14 +26,11 @@ class _LoginViewState extends State<LoginView> {
     try {
       _usermodel = UserModel(
           email: _emailController.text, password: _passwordController.text);
-
       final data = await _authService.loginUser(_usermodel);
 
       if (data != null) {
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       }
-
-      ///
     } on FirebaseAuthException catch (e) {
       setState(() {
         _isLoading = false;
@@ -46,8 +41,6 @@ class _LoginViewState extends State<LoginView> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(err[1])));
     }
-
-    ///
   }
 
   @override
@@ -57,7 +50,7 @@ class _LoginViewState extends State<LoginView> {
       body: Container(
         height: double.infinity,
         width: double.infinity,
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Stack(
           children: [
             Form(
@@ -70,7 +63,7 @@ class _LoginViewState extends State<LoginView> {
                     'Login to your Account',
                     style: themedata.textTheme.displayMedium,
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   TextFormField(
@@ -88,15 +81,15 @@ class _LoginViewState extends State<LoginView> {
                       hintStyle: themedata.textTheme.displaySmall,
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.white),
+                        borderSide: const BorderSide(color: Colors.white),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.white),
+                        borderSide: const BorderSide(color: Colors.white),
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   TextFormField(
@@ -115,32 +108,45 @@ class _LoginViewState extends State<LoginView> {
                       hintStyle: themedata.textTheme.displaySmall,
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.white),
+                        borderSide: const BorderSide(color: Colors.white),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.white),
+                        borderSide: const BorderSide(color: Colors.white),
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 15,
                   ),
                   InkWell(
                     onTap: () async {
-                      if (_loginKey.currentState!.validate()) {
-
-
-                        
-                        UserCredential userdata = await FirebaseAuth.instance
-                            .signInWithEmailAndPassword(
-                                email: _emailController.text.trim(),
-                                password: _passwordController.text.trim());
-
-                        if (userdata != null) {
-                          Navigator.pushNamedAndRemoveUntil(
-                              context, '/home', (route) => false);
+                      try {
+                        if (_loginKey.currentState!.validate()) {
+                          _login(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text('Enter valid email and password')));
                         }
+                      } on FirebaseAuthException catch (e) {
+                        String errorMessage = 'An error occurred';
+
+                        if (e.code == 'user-not-found') {
+                          errorMessage = 'No user found for that email.';
+                        } else if (e.code == 'wrong-password') {
+                          errorMessage =
+                              'Wrong password provided for that user.';
+                        } else {
+                          errorMessage = e.message ?? 'An error occurred';
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(errorMessage)));
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('An unexpected error occurred')));
                       }
                     },
                     child: Container(
@@ -158,7 +164,7 @@ class _LoginViewState extends State<LoginView> {
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 15,
                   ),
                   Row(
@@ -168,7 +174,7 @@ class _LoginViewState extends State<LoginView> {
                         "Don't have an Account?",
                         style: themedata.textTheme.displaySmall,
                       ),
-                      SizedBox(
+                      const SizedBox(
                         width: 10,
                       ),
                       InkWell(
@@ -187,7 +193,7 @@ class _LoginViewState extends State<LoginView> {
             ),
             Visibility(
                 visible: _isLoading,
-                child: Center(
+                child: const Center(
                   child: CircularProgressIndicator(),
                 ))
           ],

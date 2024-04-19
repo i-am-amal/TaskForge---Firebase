@@ -10,72 +10,62 @@ class AuthService {
       FirebaseFirestore.instance.collection('users');
 
   Future<UserCredential?> registerUser(UserModel user) async {
-    UserCredential userData = await FirebaseAuth.instance
+    UserCredential? userData = await FirebaseAuth.instance
         .createUserWithEmailAndPassword(
             email: user.email.toString(), password: user.password.toString());
 
-    if (userData != null) {
-      FirebaseFirestore.instance
-          .collection('users')
-          .doc(userData.user!.uid)
-          .set({
-        'uid': userData.user!.uid,
-        'email': userData.user!.email,
-        'name': user.name,
-        'createdAt': user.createdAt,
-        'status': user.status
-      });
-      return userData;
-    }
+    FirebaseFirestore.instance.collection('users').doc(userData.user!.uid).set({
+      'uid': userData.user!.uid,
+      'email': userData.user!.email,
+      'name': user.name,
+      'createdAt': user.createdAt,
+      'status': user.status
+    });
+    return userData;
   }
 
 //login
-///////////////////
+
   Future<DocumentSnapshot?> loginUser(UserModel user) async {
     DocumentSnapshot snap;
 
-    SharedPreferences _pref = await SharedPreferences.getInstance();
+    SharedPreferences pref = await SharedPreferences.getInstance();
 
-    UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+    UserCredential? userCredential = await _auth.signInWithEmailAndPassword(
         email: user.email.toString(), password: user.password.toString());
 
     String? token = await userCredential.user!.getIdToken();
 
-    if (userCredential != null) {
-      snap = await _userCollection.doc(userCredential.user!.uid).get();
+    snap = await _userCollection.doc(userCredential.user!.uid).get();
 
-      await _pref.setString(('token'), token!);
-      await _pref.setString(('name'), snap['name']);
-      await _pref.setString(('email'), snap['email']);
-      await _pref.setString(('uid'), snap['uid']);
+    await pref.setString(('token'), token!);
+    await pref.setString(('name'), snap['name']);
+    await pref.setString(('email'), snap['email']);
+    await pref.setString(('uid'), snap['uid']);
 
-      return snap;
-    }
+    return snap;
   }
 
   ///////////////////logout
 
   Future<void> logout() async {
-    SharedPreferences _pref = await SharedPreferences.getInstance();
+    SharedPreferences pref = await SharedPreferences.getInstance();
 
-    await _pref.clear();
+    await pref.clear();
     await _auth.signOut();
   }
 
   //is logged in
 
   Future<bool> isloggedin() async {
-    SharedPreferences _pref = await SharedPreferences.getInstance();
+    SharedPreferences pref = await SharedPreferences.getInstance();
 
-    String? _token = await _pref.getString('token');
+    String? token = pref.getString('token');
 
-    if (_token == null) {
+    if (token == null) {
       return false;
     } else {
       return true;
     }
   }
 }
-
-
-

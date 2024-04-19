@@ -1,6 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:taskforge/model/task_model.dart';
 import 'package:taskforge/services/auth_services.dart';
 import 'package:taskforge/services/task_service.dart';
@@ -14,7 +14,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  TaskService _taskService = TaskService();
+  final TaskService _taskService = TaskService();
+  String? name;
+
+  getUserName() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    name = pref.getString('name');
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    getUserName();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,12 +39,12 @@ class _HomePageState extends State<HomePage> {
         onPressed: () {
           Navigator.pushNamed(context, '/addtask');
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
       body: Container(
         height: double.infinity,
         width: double.infinity,
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,11 +58,11 @@ class _HomePageState extends State<HomePage> {
                       'Hi',
                       style: themedata.textTheme.displayMedium,
                     ),
-                    SizedBox(
+                    const SizedBox(
                       width: 10,
                     ),
                     Text(
-                      'Amal',
+                      name ?? 'User',
                       style: themedata.textTheme.displayMedium,
                     )
                   ],
@@ -57,37 +70,44 @@ class _HomePageState extends State<HomePage> {
                 CircleAvatar(
                   child: IconButton(
                       onPressed: () {
-                        final user = FirebaseAuth.instance.currentUser;
+                        SharedPreferences.getInstance().then((prefs) {
+                          prefs.remove('token');
+                          prefs.remove('name');
+                          prefs.remove('email');
+                          prefs.remove('uid');
+                        });
+
+                        // user.delete();
 
                         AuthService().logout().then((value) =>
                             Navigator.pushNamedAndRemoveUntil(
                                 context, '/', (route) => false));
                       },
-                      icon: Icon(Icons.logout_outlined)),
+                      icon: const Icon(Icons.logout_outlined)),
                 )
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 15,
             ),
             Text(
               'Your To-dos',
               style: themedata.textTheme.displayMedium,
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
-
             StreamBuilder<List<TaskModel>>(
-                stream: _taskService.getAllTasks(),
+                stream: _taskService
+                    .getAllTasks(FirebaseAuth.instance.currentUser!.uid),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
+                    return const Center(
                       child: CircularProgressIndicator(),
                     );
                   }
 
-                  if (snapshot.hasData && snapshot.data!.length == 0) {
+                  if (snapshot.hasData && snapshot.data!.isEmpty) {
                     return Center(
                       child: Text(
                         'No task added',
@@ -105,22 +125,21 @@ class _HomePageState extends State<HomePage> {
                     );
                   }
 
-                  if (snapshot.hasData && snapshot.data!.length != 0) {
+                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                     List<TaskModel> tasks = snapshot.data ?? [];
 
                     return Expanded(
                       child: ListView.builder(
                           itemCount: snapshot.data!.length,
                           itemBuilder: (context, index) {
-                            final _task = tasks[index];
+                            final task = tasks[index];
 
                             return Card(
                               elevation: 5.0,
                               color: themedata.scaffoldBackgroundColor
                                   .withOpacity(0.8),
-                              // color: themedata.scaffoldBackgroundColor,
                               child: ListTile(
-                                leading: CircleAvatar(
+                                leading: const CircleAvatar(
                                   backgroundColor: Colors.transparent,
                                   child: Icon(
                                     Icons.circle_outlined,
@@ -128,14 +147,14 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                                 title: Text(
-                                  '${_task.title}',
+                                  '${task.title}',
                                   style: themedata.textTheme.displaySmall,
                                 ),
                                 subtitle: Text(
-                                  '${_task.body}',
+                                  '${task.body}',
                                   style: themedata.textTheme.displaySmall,
                                 ),
-                                trailing: Container(
+                                trailing: SizedBox(
                                   width: 100,
                                   child: Row(
                                     children: [
@@ -145,18 +164,23 @@ class _HomePageState extends State<HomePage> {
                                               context,
                                               MaterialPageRoute(
                                                   builder: (context) =>
-                                                      AddTaskView(task: _task,)));
+                                                      AddTaskView(
+                                                        task: task,
+                                                      )));
                                         },
-                                        icon: Icon(
+                                        icon: const Icon(
                                           Icons.edit,
                                           color: Colors.teal,
                                         ),
                                       ),
                                       IconButton(
                                         onPressed: () {
-                                          _taskService.deleteTask(_task.id);
+                                          _taskService.deleteTask(
+                                              task.id,
+                                              FirebaseAuth
+                                                  .instance.currentUser!.uid);
                                         },
-                                        icon: Icon(
+                                        icon: const Icon(
                                           Icons.delete,
                                           color: Colors.red,
                                         ),
@@ -176,56 +200,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   );
                 })
-
-            // Expanded(
-            //   child: ListView.builder(
-            //       itemCount: 5,
-            //       itemBuilder: (context, index) {
-            //         return Card(
-            //           elevation: 5.0,
-            //           color: themedata.scaffoldBackgroundColor.withOpacity(0.8),
-            //           // color: themedata.scaffoldBackgroundColor,
-            //           child: ListTile(
-            //             leading: CircleAvatar(
-            //               backgroundColor: Colors.transparent,
-            //               child: Icon(
-            //                 Icons.circle_outlined,
-            //                 color: Colors.white,
-            //               ),
-            //             ),
-            //             title: Text(
-            //               'to do',
-            //               style: themedata.textTheme.displaySmall,
-            //             ),
-            //             subtitle: Text(
-            //               'this is a dummy text ',
-            //               style: themedata.textTheme.displaySmall,
-            //             ),
-            //             trailing: Container(
-            //               width: 100,
-            //               child: Row(
-            //                 children: [
-            //                   IconButton(
-            //                     onPressed: () {},
-            //                     icon: Icon(
-            //                       Icons.edit,
-            //                       color: Colors.teal,
-            //                     ),
-            //                   ),
-            //                   IconButton(
-            //                     onPressed: () {},
-            //                     icon: Icon(
-            //                       Icons.delete,
-            //                       color: Colors.red,
-            //                     ),
-            //                   )
-            //                 ],
-            //               ),
-            //             ),
-            //           ),
-            //         );
-            //       }),
-            // )
           ],
         ),
       ),

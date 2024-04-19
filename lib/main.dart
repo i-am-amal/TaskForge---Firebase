@@ -18,26 +18,25 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       initialRoute: "/splash",
       routes: {
-        '/': (context) => LoginView(),
-        '/register': (context) => RegisterView(),
-        '/home': (context) => HomePage(),
-        '/addtask': (context) => AddTaskView(),
-        '/splash':(context) => SplashView(),
+        '/': (context) => const LoginView(),
+        '/register': (context) => const RegisterView(),
+        '/home': (context) => const HomePage(),
+        '/addtask': (context) => const AddTaskView(),
+        '/splash': (context) => const SplashView(),
       },
       theme: ThemeData(
-        textTheme: TextTheme(
+        textTheme: const TextTheme(
           displayMedium: TextStyle(color: Colors.white, fontSize: 18),
           displaySmall: TextStyle(color: Colors.white70, fontSize: 14),
         ),
         scaffoldBackgroundColor: const Color(0xff0E1D3E),
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
             color: Color(0xff0E1D3E),
             iconTheme: IconThemeData(color: Colors.white)),
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),

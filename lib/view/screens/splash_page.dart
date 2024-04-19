@@ -15,25 +15,19 @@ class _SplashViewState extends State<SplashView> {
   String? token;
 
   getData() async {
-    SharedPreferences _pref = await SharedPreferences.getInstance();
-    token = await _pref.getString('token');
-    name = await _pref.getString('name');
-    email = await _pref.getString('email');
-    uid = await _pref.getString('uid');
-
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    token = pref.getString('token');
+    name = pref.getString('name');
+    email = pref.getString('email');
+    uid = pref.getString('uid');
     setState(() {});
   }
 
   @override
   void initState() {
     getData();
-
-    var d = Duration(seconds: 5);
-    Future.delayed(d, () {
+    Future.delayed(const Duration(seconds: 5), () {
     checkLoginStatus();
-
-
-
     });
     super.initState();
   }
